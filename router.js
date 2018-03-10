@@ -1,9 +1,5 @@
 'use strict';
 const express = require('express');
-
-// Lo comento porque no esta implementado
-// const { getSuma, getResta, getMultiplica, getDivide } = require('./model/model.js') ;
-
 const router = express.Router();
 
 
@@ -31,6 +27,8 @@ router.post('/calculadora/:operacion', (req, res) => {
         'operacion': operacion,
         'operando1': data.operando1,
         'operando2': data.operando2,
+        'operando3': data.operando3,
+        'operando4': data.operando4
     });
 });
 
@@ -49,7 +47,10 @@ function parametros_middleware(req, res, next) {
 // Middleware para comprobar el tipo de los parámetros
 function tipo_middleware(req, res, next) {
     let data = req.body;
-    if (!(typeof data.operando1 == 'number') || !(typeof data.operando2 == 'number')) {
+   
+    if (!(typeof data.operando1 == 'number') || !(typeof data.operando2 == 'number')
+        || (data.operando3 != null && !(typeof data.operando3 == 'number'))
+        || (data.operando4 != null && !(typeof data.operando4 == 'number'))) {
         res.status(400).json({
             'error': 'Tipo parámetros no valido'
         });
@@ -65,12 +66,22 @@ function operacion_middleware(req, res, next) {
     let multiplica = ['multiplica'];
     let division = ['division'];
     let operacion = req.params.operacion;
+    let data = req.body;
 
     if ((suma.indexOf(operacion) === -1) && resta.indexOf(operacion) === -1 
         && multiplica.indexOf(operacion) === -1 && division.indexOf(operacion) === -1 ) {
         res.status(400).json({
             'error': 'Operacion no valida'
         });
+    } else if(division.indexOf(operacion) === 0) {
+        if ((data.operando2 === 0) || (data.operando3 != null && data.operando3 === 0)
+            || (data.operando4 != null && data.operando4 === 0)) {
+            res.status(400).json({
+                'error': 'Cuando se hace una resta no se puede dividir entre 0'
+            });
+        }else{
+            next();
+        }
     } else {
         next();
     }
